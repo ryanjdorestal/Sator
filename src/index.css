@@ -1,0 +1,34 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    background-color: #204D36;
+  }
+  
+  body {
+    @apply font-sans antialiased;
+    background-color: #204D36;
+  }
+}
+
+@layer utilities {
+  .topographic-pattern {
+    background-image: 
+      repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(139, 184, 111, 0.03) 2px, rgba(139, 184, 111, 0.03) 4px),
+      repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(139, 184, 111, 0.03) 2px, rgba(139, 184, 111, 0.03) 4px),
+      repeating-linear-gradient(45deg, transparent, transparent 1px, rgba(139, 184, 111, 0.02) 1px, rgba(139, 184, 111, 0.02) 2px);
+    background-size: 100px 100px, 100px 100px, 20px 20px;
+  }
+  
+  .topographic-pattern-dark {
+    background-image: 
+      repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(139, 184, 111, 0.05) 2px, rgba(139, 184, 111, 0.05) 4px),
+      repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(139, 184, 111, 0.05) 2px, rgba(139, 184, 111, 0.05) 4px),
+      repeating-linear-gradient(45deg, transparent, transparent 1px, rgba(139, 184, 111, 0.03) 1px, rgba(139, 184, 111, 0.03) 2px);
+    background-size: 100px 100px, 100px 100px, 20px 20px;
+  }
+}
+
