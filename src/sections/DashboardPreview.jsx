@@ -30,7 +30,7 @@ export default function DashboardPreview() {
             <div className="bg-white shadow-sm h-[389px] w-full">
               <div className="p-6">
                 <h3 className="font-[Inconsolata] font-extrabold text-[22px] md:text-[30px] tracking-two uppercase text-[#204D36]">
-                  LIVE SENSOR FEED
+                  LIVE DATA FEED
                 </h3>
               </div>
             </div>

@@ -182,7 +182,7 @@ void loop() {
       // Reconnect if needed
       if (WiFi.status() != WL_CONNECTED) wifiConnect();
 
-      sendToThingSpeak(tC, hR, lightPct, airPct, rawLight, rawAir);
+      sendToThingSpeak(tC, hR, lightPct, rawAir);
     }
   }
 }
