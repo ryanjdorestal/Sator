@@ -29,3 +29,10 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# Arduino Secrets
+bottomSensors/arduino_secrets_bottom.h
+topSensors/arduino_secrets_top.h
+
+# Arduino Properties
+bottomSensors/bottom_properties.h
+topSensors/top_properties.h
