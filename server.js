@@ -11,23 +11,31 @@ app.use(express.json());
 app.use(cors());
 
 // Initialize GoogleGenAI - it automatically picks up GEMINI_API_KEY from environment
-const ai = new GoogleGenAI({});
+const genAI = new GoogleGenAI({});
 
-// Initialize ElevenLabs client for TTS
+// Initialize ElevenLabs client for TTS (optional)
 console.log("🔍 TTS Debug: Checking ElevenLabs API key...");
 const elevenlabsApiKey = process.env.ELEVENLABS_API_KEY;
+let elevenlabs = null;
+
 if (!elevenlabsApiKey) {
-  console.error("❌ TTS Error: ELEVENLABS_API_KEY is not set in .env file");
+  console.warn("⚠️  TTS Warning: ELEVENLABS_API_KEY is not set in .env file");
+  console.warn("⚠️  TTS will be disabled. Add ELEVENLABS_API_KEY to .env to enable voice responses.");
 } else if (elevenlabsApiKey.length < 20) {
   console.error("❌ TTS Error: ELEVENLABS_API_KEY appears to be invalid (too short)");
 } else {
   console.log("✅ TTS Debug: API key found (length:", elevenlabsApiKey.length, "characters)");
   console.log("🔍 TTS Debug: API key starts with:", elevenlabsApiKey.substring(0, 7) + "...");
+  
+  try {
+    elevenlabs = new ElevenLabsClient({
+      apiKey: elevenlabsApiKey,
+    });
+    console.log("✅ TTS: ElevenLabs client initialized successfully");
+  } catch (error) {
+    console.error("❌ TTS Error: Failed to initialize ElevenLabs client:", error.message);
+  }
 }
-
-const elevenlabs = new ElevenLabsClient({
-  apiKey: elevenlabsApiKey,
-});
 
 // Rachel's voice ID for Eden
 const EDEN_VOICE_ID = "21m00Tcm4TlvDq8ikWAM";
@@ -35,9 +43,9 @@ const EDEN_VOICE_ID = "21m00Tcm4TlvDq8ikWAM";
 // Function to generate speech from text
 async function speakEdenResponse(text) {
   try {
-    // Check if API key exists
-    if (!elevenlabsApiKey) {
-      console.error("❌ TTS Error: No API key available");
+    // Check if ElevenLabs client is initialized
+    if (!elevenlabs) {
+      console.error("❌ TTS Error: ElevenLabs client not initialized");
       throw new Error("ELEVENLABS_API_KEY not configured");
     }
 
@@ -152,13 +160,30 @@ User's question: ${message}`;
     }
     
     // Use the API according to @google/genai documentation
-    const response = await ai.models.generateContent({
-      model: "gemini-2.0-flash-exp",
-      contents: context,
-    });
+    console.log("🤖 Gemini: Sending request to AI...");
+    console.log("🤖 Gemini: Context length:", context.length, "characters");
     
-    // Extract text from response (response.text is a getter)
-    const text = response.text;
+    let text;
+    
+    try {
+      // Generate content using @google/genai (matching working commit)
+      const response = await genAI.models.generateContent({
+        model: "gemini-2.0-flash-exp",
+        contents: context,
+      });
+      
+      console.log("✅ Gemini: Response received");
+      
+      // Extract text from response (response.text is a getter)
+      text = response.text;
+             
+      console.log("✅ Gemini: Text extracted, length:", text?.length || 0);
+    } catch (geminiError) {
+      console.error("❌ Gemini API call failed:");
+      console.error("  Error message:", geminiError.message);
+      console.error("  Error stack:", geminiError.stack);
+      throw geminiError;
+    }
     
     const result = { reply: text };
 
@@ -194,18 +219,32 @@ app.get("/api/thingspeak/top", async (req, res) => {
     const channelId = process.env.THINGSPEAK_TOP_CHANNEL_ID;
     const readApiKey = process.env.THINGSPEAK_TOP_READ_KEY;
     
+    console.log("📊 ThingSpeak Top: Channel ID exists:", !!channelId, "Read Key exists:", !!readApiKey);
+    
     if (!channelId || !readApiKey) {
+      console.error("❌ ThingSpeak Top: Missing credentials");
       return res.status(500).json({ error: "ThingSpeak top credentials not configured" });
     }
 
     // Get last entry and recent feeds
+    console.log("🔍 ThingSpeak Top: Fetching data from channel", channelId);
     const [lastEntryRes, feedsRes] = await Promise.all([
       fetch(`https://api.thingspeak.com/channels/${channelId}/feeds/last.json?api_key=${readApiKey}`),
       fetch(`https://api.thingspeak.com/channels/${channelId}/feeds.json?api_key=${readApiKey}&results=100`)
     ]);
 
+    console.log("📡 ThingSpeak Top: Last entry status:", lastEntryRes.status, "Feeds status:", feedsRes.status);
+
+    if (!lastEntryRes.ok || !feedsRes.ok) {
+      console.error("❌ ThingSpeak Top: API returned error status");
+      return res.status(500).json({ error: "ThingSpeak API returned error" });
+    }
+
     const lastEntry = await lastEntryRes.json();
     const feeds = await feedsRes.json();
+
+    console.log("✅ ThingSpeak Top: Data received. Last entry has fields:", !!lastEntry.field1);
+    console.log("📊 ThingSpeak Top: Sample values - Temp:", lastEntry.field1, "Humidity:", lastEntry.field2, "Light:", lastEntry.field3, "AQI:", lastEntry.field4);
 
     res.json({
       current: {
@@ -215,17 +254,18 @@ app.get("/api/thingspeak/top", async (req, res) => {
         airQuality: parseFloat(lastEntry.field4) || 0,
         timestamp: lastEntry.created_at
       },
-      history: feeds.feeds.map(feed => ({
+      history: feeds.feeds ? feeds.feeds.map(feed => ({
         timestamp: feed.created_at,
         temperature: parseFloat(feed.field1) || 0,
         humidity: parseFloat(feed.field2) || 0,
         lightPct: parseFloat(feed.field3) || 0,
         airQuality: parseFloat(feed.field4) || 0
-      }))
+      })) : []
     });
   } catch (error) {
-    console.error("ThingSpeak top sensor fetch error:", error);
-    res.status(500).json({ error: "Failed to fetch top data" });
+    console.error("❌ ThingSpeak top sensor fetch error:", error.message);
+    console.error("Stack:", error.stack);
+    res.status(500).json({ error: "Failed to fetch top data: " + error.message });
   }
 });
 
@@ -234,17 +274,31 @@ app.get("/api/thingspeak/bottom", async (req, res) => {
     const channelId = process.env.THINGSPEAK_BOTTOM_CHANNEL_ID;
     const readApiKey = process.env.THINGSPEAK_BOTTOM_READ_KEY;
     
+    console.log("📊 ThingSpeak Bottom: Channel ID exists:", !!channelId, "Read Key exists:", !!readApiKey);
+    
     if (!channelId || !readApiKey) {
+      console.error("❌ ThingSpeak Bottom: Missing credentials");
       return res.status(500).json({ error: "ThingSpeak bottom credentials not configured" });
     }
 
+    console.log("🔍 ThingSpeak Bottom: Fetching data from channel", channelId);
     const [lastEntryRes, feedsRes] = await Promise.all([
       fetch(`https://api.thingspeak.com/channels/${channelId}/feeds/last.json?api_key=${readApiKey}`),
       fetch(`https://api.thingspeak.com/channels/${channelId}/feeds.json?api_key=${readApiKey}&results=100`)
     ]);
 
+    console.log("📡 ThingSpeak Bottom: Last entry status:", lastEntryRes.status, "Feeds status:", feedsRes.status);
+
+    if (!lastEntryRes.ok || !feedsRes.ok) {
+      console.error("❌ ThingSpeak Bottom: API returned error status");
+      return res.status(500).json({ error: "ThingSpeak API returned error" });
+    }
+
     const lastEntry = await lastEntryRes.json();
     const feeds = await feedsRes.json();
+
+    console.log("✅ ThingSpeak Bottom: Data received. Last entry has fields:", !!lastEntry.field1);
+    console.log("📊 ThingSpeak Bottom: Sample values - N:", lastEntry.field1, "P:", lastEntry.field2, "K:", lastEntry.field3, "Moisture:", lastEntry.field4);
 
     res.json({
       current: {
@@ -254,17 +308,18 @@ app.get("/api/thingspeak/bottom", async (req, res) => {
         soilMoisture: parseInt(lastEntry.field4) || 0,
         timestamp: lastEntry.created_at
       },
-      history: feeds.feeds.map(feed => ({
+      history: feeds.feeds ? feeds.feeds.map(feed => ({
         timestamp: feed.created_at,
         nitrogen: parseInt(feed.field1) || 0,
         phosphorus: parseInt(feed.field2) || 0,
         potassium: parseInt(feed.field3) || 0,
         soilMoisture: parseInt(feed.field4) || 0
-      }))
+      })) : []
     });
   } catch (error) {
-    console.error("ThingSpeak bottom sensor fetch error:", error);
-    res.status(500).json({ error: "Failed to fetch bottom data" });
+    console.error("❌ ThingSpeak bottom sensor fetch error:", error.message);
+    console.error("Stack:", error.stack);
+    res.status(500).json({ error: "Failed to fetch bottom data: " + error.message });
   }
 });
 
