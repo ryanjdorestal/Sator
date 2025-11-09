@@ -40,6 +40,69 @@ const Dashboard = () => {
     setIsDropdownOpen(false)
   }
 
+  // Function to play audio from base64 or fetch from server
+  const playAudio = async (text, audioData = null, audioFormat = 'mp3') => {
+    try {
+      console.log('🔍 TTS Client Debug: playAudio called');
+      console.log('  - Text length:', text?.length || 0);
+      console.log('  - Has audioData:', !!audioData);
+      console.log('  - AudioFormat:', audioFormat);
+      
+      let audioUrl;
+      
+      if (audioData) {
+        console.log('🔍 TTS Client Debug: Using stored audio data (base64)');
+        audioUrl = `data:audio/${audioFormat};base64,${audioData}`;
+      } else {
+        console.log('🔍 TTS Client Debug: Fetching audio from server...');
+        const response = await fetch('/api/chat/audio', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ text }),
+        });
+        
+        console.log('🔍 TTS Client Debug: Server response status:', response.status);
+        
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+          console.error('❌ TTS Client Error: Server returned error:', errorData);
+          throw new Error(`Failed to generate audio: ${errorData.error || response.statusText}`);
+        }
+        
+        console.log('✅ TTS Client Debug: Converting response to blob...');
+        const blob = await response.blob();
+        console.log('✅ TTS Client Debug: Blob created (size:', blob.size, 'bytes, type:', blob.type, ')');
+        audioUrl = URL.createObjectURL(blob);
+      }
+      
+      console.log('🔍 TTS Client Debug: Creating Audio element...');
+      const audio = new Audio(audioUrl);
+      
+      audio.onloadstart = () => console.log('🔍 TTS Client Debug: Audio loading started');
+      audio.oncanplay = () => console.log('✅ TTS Client Debug: Audio can play');
+      audio.onerror = (e) => {
+        console.error('❌ TTS Client Error: Audio playback error:', e);
+        console.error('  - Error code:', audio.error?.code);
+        console.error('  - Error message:', audio.error?.message);
+      };
+      audio.onended = () => console.log('✅ TTS Client Debug: Audio playback ended');
+      
+      console.log('🔍 TTS Client Debug: Attempting to play audio...');
+      await audio.play();
+      console.log('✅ TTS Client Debug: Audio playing successfully');
+    } catch (error) {
+      console.error('❌ TTS Client Error: playAudio failed');
+      console.error('  - Error name:', error.name);
+      console.error('  - Error message:', error.message);
+      console.error('  - Error stack:', error.stack);
+      
+      // Show user-friendly error
+      alert(`Unable to play audio: ${error.message}. Check browser console for details.`);
+    }
+  }
+
   const handleSendMessage = async (e) => {
     e.preventDefault()
     if (!inputMessage.trim()) return
@@ -65,6 +128,7 @@ const Dashboard = () => {
         body: JSON.stringify({
           message: messageToSend,
           sensorData: selectedSensor !== 'SENSOR TYPE' ? { sensor: selectedSensor } : null,
+          includeAudio: true, // Request audio for TTS
         }),
       })
 
@@ -74,11 +138,24 @@ const Dashboard = () => {
 
       const data = await response.json()
       
+      console.log('🔍 TTS Client Debug: Chat response received');
+      console.log('  - Has reply:', !!data.reply);
+      console.log('  - Has audio:', !!data.audio);
+      console.log('  - Audio format:', data.audioFormat);
+      console.log('  - Audio error:', data.audioError);
+      
+      if (data.audioError) {
+        console.error('❌ TTS Client Error: Server reported audio error:', data.audioError);
+      }
+      
       const edenResponse = {
         id: Date.now() + 1,
         text: data.reply || "I'm sorry, I couldn't process your request.",
         sender: 'eden',
         timestamp: new Date(),
+        audio: data.audio || null, // Store audio for TTS playback
+        audioFormat: data.audioFormat || null,
+        audioError: data.audioError || null, // Store any audio errors
       }
       setMessages((prev) => [...prev, edenResponse])
     } catch (error) {
@@ -185,13 +262,28 @@ const Dashboard = () => {
                   className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
                   <div
-                    className={`max-w-[80%] rounded-lg p-4 ${
+                    className={`max-w-[80%] rounded-lg p-4 flex items-center gap-2 ${
                       message.sender === 'user'
                         ? 'bg-[#E0A622] text-[#204D36]'
                         : 'bg-white text-[#204D36]'
                     }`}
                   >
-                    <p className="text-sm leading-relaxed">{message.text}</p>
+                    <p className="text-sm leading-relaxed flex-1">{message.text}</p>
+                    {/* Speaker icon for Eden's messages */}
+                    {message.sender === 'eden' && (
+                      <button
+                        onClick={() => playAudio(message.text, message.audio, message.audioFormat)}
+                        className="p-1 hover:opacity-70 transition-opacity flex-shrink-0"
+                        aria-label="Play Eden's voice"
+                        title="Play Eden's voice"
+                      >
+                        <img 
+                          src="/speaker_icon.png" 
+                          alt="Speaker" 
+                          className="w-5 h-5"
+                        />
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}

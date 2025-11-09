@@ -100,6 +100,14 @@ const Navbar = () => {
           >
             Team
           </a>
+          <span className="text-[#2A2A2A] opacity-60 text-sm">|</span>
+          <Link 
+            to="/rewards" 
+            className="text-[14px] font-medium text-[#204D36] mx-4 hover:text-[#E0A622] transition-all duration-200"
+            style={{ fontFamily: 'Space Grotesk, sans-serif' }}
+          >
+            Rewards
+          </Link>
         </div>
         
         {/* CTA Button */}
