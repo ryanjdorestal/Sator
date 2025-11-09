@@ -12,6 +12,9 @@ export default {
         'accent-hover': '#E3B341',
         offwhite: '#F5F5F3',
         'dark-overlay': '#0C0C0C',
+        green: '#204D36',
+        gold: '#E0A622',
+        sand: '#EDE3CF',
         brand: {
           green: '#204D36',
           gold: '#E0A622',
@@ -23,6 +26,9 @@ export default {
         shadow: {
           gray: 'rgba(12, 12, 12, 0.35)',
         },
+      },
+      letterSpacing: {
+        two: '0.02em',
       },
       fontFamily: {
         sans: ['Space Grotesk', 'system-ui', 'sans-serif'],

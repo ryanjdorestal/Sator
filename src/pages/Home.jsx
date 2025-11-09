@@ -1,5 +1,6 @@
 import Navbar from '../components/Navbar'
 import Hero from '../components/Hero'
+import DashboardPreview from '../sections/DashboardPreview'
 
 const Home = () => {
   return (
@@ -196,6 +197,9 @@ const Home = () => {
           </div>
         </div>
       </section>
+      
+      {/* Dashboard Preview Section */}
+      <DashboardPreview />
     </>
   )
 }
