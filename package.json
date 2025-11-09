@@ -7,6 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js",
     "dev": "vite",
+    "dev:all": "concurrently \"npm run start\" \"npm run dev\"",
     "build": "vite build",
     "preview": "vite preview"
   },
@@ -15,6 +16,7 @@
   "license": "ISC",
   "type": "module",
   "dependencies": {
+    "@google/genai": "^1.29.0",
     "@google/generative-ai": "^0.24.1",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",

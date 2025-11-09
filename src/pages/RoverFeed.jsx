@@ -1,6 +1,12 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 
 const RoverFeed = () => {
+  const [streamError, setStreamError] = useState(false)
+  
+  // Use proxy endpoint to avoid CORS issues
+  const esp32CameraUrl = '/api/camera-stream'
+
   return (
     <div className="min-h-screen bg-[#1B2A22] relative flex items-center justify-center">
       {/* Topographic pattern overlay */}
@@ -26,9 +32,22 @@ const RoverFeed = () => {
             LIVE CAMERA FEED
           </h3>
           
-          {/* Video Placeholder */}
-          <div className="w-full h-[calc(100%-60px)] bg-white rounded-[4px] flex items-center justify-center">
-            <p className="text-[#204D36]/40 text-sm">Live camera feed will appear here</p>
+          {/* ESP32 Camera Stream */}
+          <div className="w-full h-[calc(100%-60px)] bg-black rounded-[4px] overflow-hidden flex items-center justify-center">
+            {streamError || !esp32CameraUrl ? (
+              <p className="text-white text-sm">
+                {!esp32CameraUrl 
+                  ? 'ESP32 camera URL not configured. Check .env file.' 
+                  : 'Camera feed unavailable. Check ESP32 connection.'}
+              </p>
+            ) : (
+              <img 
+                src={esp32CameraUrl}
+                alt="Live Rover Camera Feed"
+                className="w-full h-full object-contain"
+                onError={() => setStreamError(true)}
+              />
+            )}
           </div>
         </div>
       </div>

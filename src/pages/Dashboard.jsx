@@ -51,21 +51,48 @@ const Dashboard = () => {
       timestamp: new Date(),
     }
 
+    const messageToSend = inputMessage
     setMessages((prev) => [...prev, userMessage])
     setInputMessage('')
     setIsLoading(true)
 
-    // Simulate API call delay
-    setTimeout(() => {
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: messageToSend,
+          sensorData: selectedSensor !== 'SENSOR TYPE' ? { sensor: selectedSensor } : null,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`)
+      }
+
+      const data = await response.json()
+      
       const edenResponse = {
         id: Date.now() + 1,
-        text: "I understand you're asking about: " + inputMessage + ". Let me analyze the sensor data and provide insights...",
+        text: data.reply || "I'm sorry, I couldn't process your request.",
         sender: 'eden',
         timestamp: new Date(),
       }
       setMessages((prev) => [...prev, edenResponse])
+    } catch (error) {
+      console.error('Error sending message:', error)
+      const errorResponse = {
+        id: Date.now() + 1,
+        text: "I'm sorry, I'm having trouble connecting right now. Please make sure the backend server is running and your GEMINI_API_KEY is configured in the .env file.",
+        sender: 'eden',
+        timestamp: new Date(),
+      }
+      setMessages((prev) => [...prev, errorResponse])
+    } finally {
       setIsLoading(false)
-    }, 1000)
+    }
   }
 
   return (
