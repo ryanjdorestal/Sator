@@ -10,22 +10,31 @@ const Footer = () => {
   }
 
   return (
-    <footer className="bg-earth-darkBrown text-white py-16">
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+    <footer className="bg-[#3B2C22] text-[#E0A622] w-full" style={{ minHeight: '350px' }}>
+      <div className="max-w-[1440px] mx-auto px-6 lg:px-12" style={{ paddingTop: '30px', paddingBottom: '48px' }}>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 items-center" style={{ minHeight: '272px' }}>
+          {/* Left Column - Flush with Team section content margin */}
           <div>
-            <h3 className="text-2xl font-bold mb-4">INFRASTRUCTURE FOR EARTH'S FUTURE</h3>
-            <p className="text-earth-cream/80 text-sm">A Sator</p>
+            <h3 className="font-bold text-[36px] mb-4" style={{ fontFamily: 'Space Grotesk, sans-serif', letterSpacing: '0%', lineHeight: '50px' }}>
+              INFRASTRUCTURE FOR EARTH'S FUTURE
+            </h3>
+            <p className="font-semibold text-[18px]" style={{ fontFamily: 'Space Grotesk, sans-serif', letterSpacing: '0%', lineHeight: '50px' }}>
+              ɣ Sator
+            </p>
           </div>
           
+          {/* Center Column */}
           <div>
-            <h4 className="font-semibold mb-4">[Quick Links]</h4>
-            <ul className="space-y-2 text-sm">
+            <h4 className="font-medium text-[16px] mb-4" style={{ fontFamily: 'Space Grotesk, sans-serif', letterSpacing: '0%' }}>
+              [ Quick Links ]
+            </h4>
+            <ul className="space-y-2" style={{ lineHeight: '120%' }}>
               <li>
                 <a 
                   href="#hero" 
                   onClick={(e) => scrollToSection(e, 'hero')}
-                  className="text-earth-cream/80 hover:text-white transition"
+                  className="text-[#E0A622] hover:opacity-80 transition text-sm"
+                  style={{ fontFamily: 'Space Grotesk, sans-serif', letterSpacing: '0%' }}
                 >
                   Home
                 </a>
@@ -34,7 +43,8 @@ const Footer = () => {
                 <a 
                   href="#mission" 
                   onClick={(e) => scrollToSection(e, 'mission')}
-                  className="text-earth-cream/80 hover:text-white transition"
+                  className="text-[#E0A622] hover:opacity-80 transition text-sm"
+                  style={{ fontFamily: 'Space Grotesk, sans-serif', letterSpacing: '0%' }}
                 >
                   Mission
                 </a>
@@ -43,13 +53,18 @@ const Footer = () => {
                 <a 
                   href="#systems" 
                   onClick={(e) => scrollToSection(e, 'systems')}
-                  className="text-earth-cream/80 hover:text-white transition"
+                  className="text-[#E0A622] hover:opacity-80 transition text-sm"
+                  style={{ fontFamily: 'Space Grotesk, sans-serif', letterSpacing: '0%' }}
                 >
-                  Systems
+                  System
                 </a>
               </li>
               <li>
-                <Link to="/dashboard" className="text-earth-cream/80 hover:text-white transition">
+                <Link 
+                  to="/dashboard" 
+                  className="text-[#E0A622] hover:opacity-80 transition text-sm"
+                  style={{ fontFamily: 'Space Grotesk, sans-serif', letterSpacing: '0%' }}
+                >
                   Dashboard
                 </Link>
               </li>
@@ -57,7 +72,8 @@ const Footer = () => {
                 <a 
                   href="#team" 
                   onClick={(e) => scrollToSection(e, 'team')}
-                  className="text-earth-cream/80 hover:text-white transition"
+                  className="text-[#E0A622] hover:opacity-80 transition text-sm"
+                  style={{ fontFamily: 'Space Grotesk, sans-serif', letterSpacing: '0%' }}
                 >
                   Team
                 </a>
@@ -65,20 +81,27 @@ const Footer = () => {
             </ul>
           </div>
           
-          <div>
-            <h4 className="font-semibold mb-4">[Connect]</h4>
-            <div className="flex gap-4 mb-4">
-              <div className="w-8 h-8 border border-white/30 rounded flex items-center justify-center hover:border-white transition cursor-pointer">
-                <span className="text-xs">📧</span>
-              </div>
-              <div className="w-8 h-8 border border-white/30 rounded flex items-center justify-center hover:border-white transition cursor-pointer">
-                <span className="text-xs">🐦</span>
-              </div>
-              <div className="w-8 h-8 border border-white/30 rounded flex items-center justify-center hover:border-white transition cursor-pointer">
-                <span className="text-xs">💼</span>
+          {/* Right Column */}
+          <div className="flex flex-col h-full justify-between">
+            <div>
+              <h4 className="font-medium text-[16px] mb-4" style={{ fontFamily: 'Space Grotesk, sans-serif', letterSpacing: '0%' }}>
+                [ Connect ]
+              </h4>
+              <div className="flex gap-4">
+                <a href="mailto:contact@sator.com" className="hover:opacity-80 transition">
+                  <img src="/email_icon_gold.png" alt="Email" className="w-8 h-8" />
+                </a>
+                <a href="https://linkedin.com/company/sator" target="_blank" rel="noopener noreferrer" className="hover:opacity-80 transition">
+                  <img src="/linkedin_icon_gold.png" alt="LinkedIn" className="w-8 h-8" />
+                </a>
+                <a href="https://github.com/sator" target="_blank" rel="noopener noreferrer" className="hover:opacity-80 transition">
+                  <img src="/github_icon_gold.png" alt="GitHub" className="w-8 h-8" />
+                </a>
               </div>
             </div>
-            <p className="text-earth-cream/60 text-xs">© Sator 2024</p>
+            <p className="text-[14px] text-right" style={{ fontFamily: 'Space Grotesk, sans-serif', letterSpacing: '0%' }}>
+              © 2025 Sator
+            </p>
           </div>
         </div>
       </div>
@@ -87,4 +110,3 @@ const Footer = () => {
 }
 
 export default Footer
-

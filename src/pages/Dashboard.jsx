@@ -1,10 +1,9 @@
-import { useState, useEffect } from 'react'
-import Navbar from '../components/Navbar'
-import { generateMockSensorData, getMockEdenResponse } from '../utils/mockData'
+import { useState, useEffect, useRef } from 'react'
+import { Link } from 'react-router-dom'
 
 const Dashboard = () => {
-  const [sensorData, setSensorData] = useState([])
-  const [selectedSensor, setSelectedSensor] = useState('all')
+  const [selectedSensor, setSelectedSensor] = useState('SENSOR TYPE')
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [messages, setMessages] = useState([
     {
       id: 1,
@@ -15,18 +14,31 @@ const Dashboard = () => {
   ])
   const [inputMessage, setInputMessage] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const dropdownRef = useRef(null)
+
+  const sensorOptions = [
+    'Temperature Sensor',
+    'Soil Moisture Sensor',
+    'Air Quality Sensor',
+    'Light Intensity Sensor',
+    'Humidity Sensor'
+  ]
 
   useEffect(() => {
-    // Generate initial sensor data
-    setSensorData(generateMockSensorData())
-    
-    // Update sensor data every 5 seconds
-    const interval = setInterval(() => {
-      setSensorData(generateMockSensorData())
-    }, 5000)
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDropdownOpen(false)
+      }
+    }
 
-    return () => clearInterval(interval)
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
+
+  const handleSensorSelect = (sensor) => {
+    setSelectedSensor(sensor)
+    setIsDropdownOpen(false)
+  }
 
   const handleSendMessage = async (e) => {
     e.preventDefault()
@@ -47,7 +59,7 @@ const Dashboard = () => {
     setTimeout(() => {
       const edenResponse = {
         id: Date.now() + 1,
-        text: getMockEdenResponse(inputMessage),
+        text: "I understand you're asking about: " + inputMessage + ". Let me analyze the sensor data and provide insights...",
         sender: 'eden',
         timestamp: new Date(),
       }
@@ -56,165 +68,145 @@ const Dashboard = () => {
     }, 1000)
   }
 
-  const filteredSensorData = selectedSensor === 'all' 
-    ? sensorData 
-    : sensorData.filter(s => s.type === selectedSensor)
-
-  const sensorTypes = ['all', ...new Set(sensorData.map(s => s.type))]
-
   return (
-    <div className="min-h-screen bg-earth-darkGreen topographic-pattern-dark">
-      <Navbar />
-      
-      <div className="pt-20 pb-8 px-6">
-        <div className="max-w-7xl mx-auto">
-          {/* Dashboard Title */}
-          <div className="mb-6 flex items-center gap-3">
-            <div className="w-10 h-10 bg-earth-mutedYellow rounded flex items-center justify-center">
-              <span className="text-earth-darkBrown font-bold">▶</span>
-            </div>
-            <h1 className="text-white text-2xl font-semibold">/dashboard</h1>
-            <div className="ml-auto w-8 h-8 border border-white/30 rounded flex items-center justify-center hover:border-white transition cursor-pointer">
-              <span className="text-white text-xl">+</span>
-            </div>
-          </div>
+    <div className="min-h-screen bg-[#1B2A22] relative">
+      {/* Topographic pattern overlay */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
+        <div className="absolute inset-0 bg-[url('/topographic_pattern_dashboard.png')] bg-cover bg-center opacity-15" />
+      </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            {/* Left Panel: Live Data Feed */}
-            <div className="lg:col-span-7 bg-earth-cream/90 backdrop-blur-sm rounded-lg border border-earth-lightGreen/30 p-6 min-h-[600px]">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-earth-darkGreen">LIVE DATA FEED</h2>
-                <select
-                  value={selectedSensor}
-                  onChange={(e) => setSelectedSensor(e.target.value)}
-                  className="px-4 py-2 bg-earth-mutedYellow text-earth-darkBrown font-medium rounded border-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-earth-darkGreen"
-                >
-                  {sensorTypes.map(type => (
-                    <option key={type} value={type}>
-                      {type === 'all' ? 'ALL SENSORS' : type}
-                    </option>
-                  ))}
-                </select>
-              </div>
+      <div className="flex flex-col min-h-screen">
+        {/* Main Content */}
+        <div className="flex-1 flex items-center justify-center px-6 py-12 gap-6">
+          {/* Left Card */}
+          <div className="w-[627px] h-[866px] bg-[#F8F5E1] rounded-none shadow-[0_2px_4px_rgba(0,0,0,0.15)] p-6 flex flex-col">
+            {/* Header */}
+            <h2 className="font-extrabold text-[18px] text-[#204D36] mb-4" style={{ fontFamily: 'Inconsolata, monospace' }}>
+              LIVE DATA FEED
+            </h2>
 
-              <div className="space-y-4">
-                {filteredSensorData.length === 0 ? (
-                  <div className="text-center py-12 text-earth-darkGreen/60">
-                    <p>No sensor data available</p>
-                  </div>
-                ) : (
-                  filteredSensorData.map((sensor, index) => (
-                    <div
+            {/* Dropdown Button */}
+            <div className="relative" ref={dropdownRef}>
+              <button
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                className="w-full bg-[#E0A622] text-[#204D36] font-extrabold text-[18px] px-5 py-3 rounded-[4px] flex items-center justify-between"
+                style={{ fontFamily: 'Inconsolata, monospace' }}
+              >
+                <span>{selectedSensor} ▼</span>
+                <img src="/dropdown_arrow.png" alt="Dropdown" className="w-4 h-4 ml-2" />
+              </button>
+
+              {/* Dropdown Menu */}
+              {isDropdownOpen && (
+                <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-[#204D36] rounded-[4px] shadow-[0_6px_12px_rgba(0,0,0,0.05)] z-50">
+                  {sensorOptions.map((option, index) => (
+                    <button
                       key={index}
-                      className="bg-white/70 rounded-lg p-6 border border-earth-lightGreen/20"
+                      onClick={() => handleSensorSelect(option)}
+                      className="w-full text-left px-5 py-3 font-extrabold text-[18px] text-[#204D36] hover:bg-[#E8E1C4] transition-colors first:rounded-t-[4px] last:rounded-b-[4px]"
+                      style={{ fontFamily: 'Inconsolata, monospace' }}
                     >
-                      <div className="flex items-center justify-between mb-3">
-                        <h3 className="text-lg font-bold text-earth-darkGreen">{sensor.name}</h3>
-                        <span className="text-sm text-earth-darkGreen/60">
-                          {new Date(sensor.timestamp).toLocaleTimeString()}
-                        </span>
-                      </div>
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-3xl font-bold text-earth-darkGreen">
-                          {sensor.value}
-                        </span>
-                        <span className="text-earth-darkGreen/70">{sensor.unit}</span>
-                      </div>
-                      <div className="mt-3 text-sm text-earth-darkGreen/60">
-                        Location: {sensor.location.lat.toFixed(4)}, {sensor.location.lng.toFixed(4)}
-                      </div>
-                    </div>
-                  ))
-                )}
+                      {option}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Data Feed Placeholder */}
+            <div className="flex-1 mt-6 bg-[#F8F5E1]">
+              {/* Placeholder for live data feed */}
+            </div>
+          </div>
+
+          {/* Center Control Bar */}
+          <div className="w-[122px] h-[411px] bg-[#F8F5E1] rounded-[30px] flex flex-col items-center justify-center gap-8 shadow-[0_2px_4px_rgba(0,0,0,0.15)]">
+            <Link to="/" className="hover:opacity-80 transition">
+              <img src="/home_button.png" alt="Home" className="w-8 h-8" />
+            </Link>
+            <Link to="/rover-feed" className="hover:opacity-80 transition">
+              <img src="/drone_button.png" alt="Rover Feed" className="w-8 h-8" />
+            </Link>
+            <button className="hover:opacity-80 transition cursor-not-allowed" disabled>
+              <img src="/help_button.png" alt="Help" className="w-8 h-8 opacity-60" />
+            </button>
+          </div>
+
+          {/* Right Card - AI Chat */}
+          <div className="w-[627px] h-[866px] bg-[#F8F5E1] rounded-none shadow-[0_2px_4px_rgba(0,0,0,0.15)] p-6 flex flex-col">
+            {/* Top Row */}
+            <div className="flex items-center gap-3 mb-6">
+              <img src="/eden_profile.png" alt="Eden" className="w-12 h-12 rounded-full" />
+              <div className="flex items-center gap-2">
+                <h3 className="font-bold text-[18px] text-[#204D36]" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+                  Eden
+                </h3>
+                <div className="flex items-center gap-1">
+                  <div className="w-2 h-2 bg-[#4AB37E] rounded-full"></div>
+                  <span className="font-medium text-[16px] text-[#204D36]" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+                    (Online)
+                  </span>
+                </div>
               </div>
             </div>
 
-            {/* Middle Navigation Bar */}
-            <div className="hidden lg:flex lg:col-span-1 flex-col items-center justify-center gap-6">
-              <div className="w-12 h-12 bg-earth-brown/50 rounded-lg flex items-center justify-center cursor-pointer hover:bg-earth-brown/70 transition">
-                <span className="text-white text-xl">🏠</span>
-              </div>
-              <div className="w-12 h-12 bg-earth-brown/50 rounded-lg flex items-center justify-center cursor-pointer hover:bg-earth-brown/70 transition">
-                <span className="text-white text-xl">⚙️</span>
-              </div>
-              <div className="w-12 h-12 bg-earth-brown/50 rounded-lg flex items-center justify-center cursor-pointer hover:bg-earth-brown/70 transition">
-                <span className="text-white text-xl">?</span>
-              </div>
-            </div>
-
-            {/* Right Panel: Chat Console with Eden */}
-            <div className="lg:col-span-4 bg-earth-cream/90 backdrop-blur-sm rounded-lg border border-earth-lightGreen/30 p-6 min-h-[600px] flex flex-col">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 rounded-full bg-earth-lightGreen flex items-center justify-center">
-                  <span className="text-2xl">👤</span>
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-xl font-bold text-earth-darkGreen">Eden</h2>
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <span className="text-sm text-earth-darkGreen/70">(Online)</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex-1 overflow-y-auto mb-4 space-y-4">
-                {messages.map((message) => (
-                  <div
-                    key={message.id}
-                    className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-                  >
-                    <div
-                      className={`max-w-[80%] rounded-lg p-4 ${
-                        message.sender === 'user'
-                          ? 'bg-earth-mutedYellow text-earth-darkBrown'
-                          : 'bg-white/70 text-earth-darkGreen'
-                      }`}
-                    >
-                      <p className="text-sm leading-relaxed">{message.text}</p>
-                      <p className="text-xs mt-2 opacity-60">
-                        {message.timestamp.toLocaleTimeString()}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-                {isLoading && (
-                  <div className="flex justify-start">
-                    <div className="bg-white/70 rounded-lg p-4">
-                      <div className="flex gap-1">
-                        <div className="w-2 h-2 bg-earth-darkGreen rounded-full animate-bounce"></div>
-                        <div className="w-2 h-2 bg-earth-darkGreen rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                        <div className="w-2 h-2 bg-earth-darkGreen rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <form onSubmit={handleSendMessage} className="flex gap-2">
-                <input
-                  type="text"
-                  value={inputMessage}
-                  onChange={(e) => setInputMessage(e.target.value)}
-                  placeholder="Ask Eden about your soil data..."
-                  className="flex-1 px-4 py-3 bg-white rounded-lg border border-earth-lightGreen/30 focus:outline-none focus:ring-2 focus:ring-earth-darkGreen text-earth-darkGreen placeholder-earth-darkGreen/50"
-                />
-                <button
-                  type="submit"
-                  className="w-12 h-12 bg-earth-brown rounded-lg flex items-center justify-center hover:bg-earth-brown/80 transition"
+            {/* Chat Area */}
+            <div className="flex-1 overflow-y-auto mb-4 space-y-4">
+              {messages.map((message) => (
+                <div
+                  key={message.id}
+                  className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
-                  <span className="text-white text-xl">▶</span>
-                </button>
-              </form>
+                  <div
+                    className={`max-w-[80%] rounded-lg p-4 ${
+                      message.sender === 'user'
+                        ? 'bg-[#E0A622] text-[#204D36]'
+                        : 'bg-white text-[#204D36]'
+                    }`}
+                  >
+                    <p className="text-sm leading-relaxed">{message.text}</p>
+                  </div>
+                </div>
+              ))}
+              {isLoading && (
+                <div className="flex justify-start">
+                  <div className="bg-white rounded-lg p-4">
+                    <div className="flex gap-1">
+                      <div className="w-2 h-2 bg-[#204D36] rounded-full animate-bounce"></div>
+                      <div className="w-2 h-2 bg-[#204D36] rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                      <div className="w-2 h-2 bg-[#204D36] rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
-          </div>
 
-          {/* Bottom Label */}
-          <div className="mt-8 text-center">
-            <div className="inline-flex items-center gap-2 text-white/80">
-              <span className="text-2xl">🤖</span>
-              <span className="text-lg font-semibold">[ AI DASHBOARD ]</span>
-            </div>
+            {/* Input Area */}
+            <form onSubmit={handleSendMessage} className="flex items-center gap-2">
+              <input
+                type="text"
+                value={inputMessage}
+                onChange={(e) => setInputMessage(e.target.value)}
+                placeholder="Type your message..."
+                className="flex-1 px-4 py-3 bg-white rounded-full border-none focus:outline-none focus:ring-2 focus:ring-[#204D36] text-[#204D36] placeholder-[#204D36]/50"
+                style={{ borderRadius: '100px' }}
+              />
+              <button
+                type="submit"
+                className="hover:opacity-80 transition"
+              >
+                <img src="/send_button.png" alt="Send" className="w-8 h-8" />
+              </button>
+            </form>
           </div>
+        </div>
+
+        {/* Footer */}
+        <div className="text-center pb-8">
+          <p className="font-bold text-[24px]" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+            <span className="text-[#E0A622]">ɣ</span>{' '}
+            <span className="text-white">[ DASHBOARD ]</span>
+          </p>
         </div>
       </div>
     </div>
@@ -222,4 +214,3 @@ const Dashboard = () => {
 }
 
 export default Dashboard
-

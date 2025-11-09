@@ -1,6 +1,8 @@
 import Navbar from '../components/Navbar'
 import Hero from '../components/Hero'
 import DashboardPreview from '../sections/DashboardPreview'
+import Team from '../sections/Team'
+import Footer from '../components/Footer'
 
 const Home = () => {
   return (
@@ -200,6 +202,12 @@ const Home = () => {
       
       {/* Dashboard Preview Section */}
       <DashboardPreview />
+      
+      {/* Team Section */}
+      <Team />
+      
+      {/* Footer Section */}
+      <Footer />
     </>
   )
 }
