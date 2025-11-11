@@ -1,1 +1,2 @@
 # Sator
+Sator is an AI-integrated rover platform that collects soil and environmental data (moisture, pH, temperature, and NPK) and transmits it securely to a live dashboard. The system features an Eden AI assistant, which summarizes readings, flags anomalies, and helps users interpret changes over time. The dashboard allows teams to switch between sensor types, monitor live feeds, and review historical data trends.
